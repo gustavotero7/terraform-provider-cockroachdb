@@ -8,6 +8,8 @@ import (
 )
 
 func TestAccResourceDatabase(t *testing.T) {
+	t.SkipNow()
+
 	resource.UnitTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: providerFactories,
