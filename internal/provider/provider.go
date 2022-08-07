@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,32 +28,93 @@ func init() {
 func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
-			DataSourcesMap: map[string]*schema.Resource{
-				"scaffolding_data_source": dataSourceScaffolding(),
+			Schema: map[string]*schema.Schema{
+				"host": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "CockroachDB server address",
+				},
+				"port": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "CockroachDB server port",
+					Default:     "26257",
+				},
+				"user": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "CockroachDB username to connect with.",
+					Sensitive:   true,
+				},
+				"password": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "CockroachDB password to connect with.",
+					Sensitive:   true,
+				},
+				"database": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "CockroachDB database name to connect to.",
+				},
+				"sslmode": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "CockroachDB SSL mode to use.",
+					Default:     "verify-full",
+				},
+				"cluster": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "CockroachDB cluster id.",
+				},
 			},
+
+			DataSourcesMap: map[string]*schema.Resource{},
 			ResourcesMap: map[string]*schema.Resource{
-				"scaffolding_resource": resourceScaffolding(),
+				"cockroachdb_database":   resourceDatabase(),
+				"cockroachdb_role":       resourceRole(),
+				"cockroachdb_grant":      resourceGrant(),
+				"cockroachdb_grant_role": resourceGrantRole(),
 			},
 		}
 
 		p.ConfigureContextFunc = configure(version, p)
-
 		return p
 	}
 }
 
 type apiClient struct {
-	// Add whatever fields, client or connection info, etc. here
-	// you would need to setup to communicate with the upstream
-	// API.
+	dsn string
+}
+
+func (c *apiClient) Conn(ctx context.Context) (*pgx.Conn, error) {
+	conn, err := pgx.Connect(ctx, c.dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := conn.Ping(ctx); err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
 
 func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	return func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		// Setup a User-Agent for your API client (replace the provider name for yours):
-		// userAgent := p.UserAgent("terraform-provider-scaffolding", version)
-		// TODO: myClient.UserAgent = userAgent
+	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		host := d.Get("host").(string)
+		port := d.Get("port").(int)
+		database := d.Get("database").(string)
+		username := d.Get("user").(string)
+		password := d.Get("password").(string)
+		sslmode := d.Get("sslmode").(string)
+		cluster := d.Get("cluster").(string)
 
-		return &apiClient{}, nil
+		dsn := "postgresql://" + username + ":" + password + "@" + host + ":" + fmt.Sprint(port) + "/" + database + "?sslmode=" + sslmode
+		if cluster != "" {
+			dsn += "&options=--cluster%3D" + cluster
+		}
+
+		return &apiClient{dsn: dsn}, diag.Diagnostics{}
 	}
 }
