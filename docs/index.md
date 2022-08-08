@@ -16,7 +16,7 @@ description: |-
 provider "cockroachdb" {
   host     = "remote_host"
   port     = 26257
-  user     = "test_user"
+  username = "test_user"
   password = "a1s2d3f4g5h6j7k8l9"
   database = "test_database"
   cluster  = "test_cluster_123"
@@ -31,7 +31,7 @@ provider "cockroachdb" {
 - `database` (String) CockroachDB database name to connect to.
 - `host` (String) CockroachDB server address
 - `password` (String, Sensitive) CockroachDB password to connect with.
-- `user` (String, Sensitive) CockroachDB username to connect with.
+- `username` (String, Sensitive) CockroachDB username to connect with.
 
 ### Optional
 
