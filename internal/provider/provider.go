@@ -40,7 +40,7 @@ func New(version string) func() *schema.Provider {
 					Description: "CockroachDB server port",
 					Default:     "26257",
 				},
-				"user": {
+				"username": {
 					Type:        schema.TypeString,
 					Required:    true,
 					Description: "CockroachDB username to connect with.",
@@ -105,7 +105,7 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 		host := d.Get("host").(string)
 		port := d.Get("port").(int)
 		database := d.Get("database").(string)
-		username := d.Get("user").(string)
+		username := d.Get("username").(string)
 		password := d.Get("password").(string)
 		sslmode := d.Get("sslmode").(string)
 		cluster := d.Get("cluster").(string)
