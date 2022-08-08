@@ -106,13 +106,27 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	privileges := make([]interface{}, 0)
 	privilegesMap := make(map[string]struct{})
+	privilegeTypeIndex := -1
 	defer rows.Close()
 	for rows.Next() {
-		var privilege string
-		err = rows.Scan(nil, nil, nil, nil, &privilege, nil)
+		if privilegeTypeIndex == -1 {
+			for i, description := range rows.FieldDescriptions() {
+				if string(description.Name) == "privilege_type" {
+					privilegeTypeIndex = i
+					break
+				}
+			}
+		}
+
+		if privilegeTypeIndex == -1 {
+			return diag.Errorf("failed to infer privilege_type column index")
+		}
+
+		vales, err := rows.Values()
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		privilege, _ := vales[privilegeTypeIndex].(string)
 		privilegesMap[privilege] = struct{}{}
 	}
 
