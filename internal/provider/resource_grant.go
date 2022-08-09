@@ -131,11 +131,13 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	// reuse state privileges if it contains all the items in privilegesMap
-	samesAsState := true
-	for _, privilege := range statePrivileges {
-		if _, ok := privilegesMap[privilege]; !ok {
-			samesAsState = false
-			break
+	samesAsState := len(statePrivileges) == len(privilegesMap)
+	if samesAsState {
+		for _, privilege := range statePrivileges {
+			if _, ok := privilegesMap[privilege]; !ok {
+				samesAsState = false
+				break
+			}
 		}
 	}
 
