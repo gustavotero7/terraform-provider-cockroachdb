@@ -97,6 +97,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	role := d.Get(attrRole).(string)
 	objectType := d.Get(attrObjectType).(string)
 	objects := sliceInterfacesToStrings(d.Get(attrObjects).([]interface{}))
+	statePrivileges := sliceInterfacesToStrings(d.Get(attrPrivileges).([]interface{}))
 
 	query := "SHOW GRANTS ON " + objectType + " " + strings.Join(objects, ",") + " FOR " + role
 	rows, err := conn.Query(ctx, query)
@@ -104,7 +105,6 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	privileges := make([]interface{}, 0)
 	privilegesMap := make(map[string]struct{})
 	privilegeTypeIndex := -1
 	defer rows.Close()
@@ -130,8 +130,20 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		privilegesMap[privilege] = struct{}{}
 	}
 
-	for s, _ := range privilegesMap {
-		privileges = append(privileges, s)
+	// reuse state privileges if it contains all the items in privilegesMap
+	samesAsState := true
+	for _, privilege := range statePrivileges {
+		if _, ok := privilegesMap[privilege]; !ok {
+			samesAsState = false
+			break
+		}
+	}
+
+	if !samesAsState {
+		statePrivileges = make([]string, 0)
+		for s, _ := range privilegesMap {
+			statePrivileges = append(statePrivileges, s)
+		}
 	}
 
 	d.SetId(buildGrantID(role, objectType))
@@ -144,7 +156,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set(attrObjects, objects); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set(attrPrivileges, privileges); err != nil {
+	if err := d.Set(attrPrivileges, statePrivileges); err != nil {
 		return diag.FromErr(err)
 	}
 	return nil

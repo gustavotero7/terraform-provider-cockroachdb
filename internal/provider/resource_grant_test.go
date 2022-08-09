@@ -17,7 +17,7 @@ func TestAccResourceGrant(t *testing.T) {
 				Config: testAccResourceGrant,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"cockroachdb_grant.test_grant", attrPrivileges+".0", "SELECT"),
+						"cockroachdb_grant.test_grant", attrPrivileges+".1", "UPDATE"),
 				),
 			},
 		},
@@ -33,6 +33,6 @@ resource "cockroachdb_grant" "test_grant" {
   role = cockroachdb_role.test_role.name
   object_type = "table"
   objects = ["*"]
-  privileges = ["SELECT"]
+  privileges = ["SELECT", "UPDATE", "DELETE"]
 }
 `
