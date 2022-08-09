@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/cockroachdb/cockroach-go/v2/crdb/crdbpgx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -128,28 +128,18 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 	if err := crdbpgx.ExecuteTx(ctx, conn, pgx.TxOptions{}, func(tx pgx.Tx) error {
-		// update username
+		// role name update is not supported in cockroachdb
 		if d.HasChange(attrRoleUsername) {
-			oldValue, newValue := d.GetChange(attrRoleUsername)
-			oldValueStr := oldValue.(string)
-			newValueStr := newValue.(string)
-			if newValueStr == "" {
-				return fmt.Errorf("username cannot be empty")
-			}
-
-			sql := fmt.Sprintf("ALTER ROLE %s RENAME TO %s", pq.QuoteIdentifier(oldValueStr), pq.QuoteIdentifier(newValueStr))
-			if _, err := tx.Exec(ctx, sql); err != nil {
-				return err
-			}
+			return errors.New("role name update is not supported in cockroachdb")
 		}
 		// update password
-		if d.HasChange(attrRolePassword) || d.HasChange(attrRoleUsername) || d.HasChange(attrRoleLogin) {
+		if d.HasChange(attrRolePassword) || d.HasChange(attrRoleLogin) {
 			loginString := "LOGIN"
+			newPassword := d.Get(attrRolePassword).(string)
 			if !login {
 				loginString = "NOLOGIN"
 			}
-			newValue := d.Get(attrRolePassword).(string)
-			sql := "ALTER ROLE " + pq.QuoteIdentifier(userName) + " WITH " + loginString + " PASSWORD " + pq.QuoteLiteral(newValue)
+			sql := "ALTER ROLE " + pq.QuoteIdentifier(userName) + " WITH " + loginString + " PASSWORD " + pq.QuoteLiteral(newPassword)
 			if _, err := tx.Exec(ctx, sql); err != nil {
 				return err
 			}
