@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -106,7 +107,7 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 		port := d.Get("port").(int)
 		database := d.Get("database").(string)
 		username := d.Get("username").(string)
-		password := d.Get("password").(string)
+		password := url.PathEscape(d.Get("password").(string))
 		sslmode := d.Get("sslmode").(string)
 		cluster := d.Get("cluster").(string)
 
