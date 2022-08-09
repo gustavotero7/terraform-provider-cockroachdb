@@ -121,6 +121,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	userName := d.Get(attrRoleUsername).(string)
+	login := d.Get(attrRoleLogin).(bool)
 
 	conn, err := meta.(*apiClient).Conn(ctx)
 	if err != nil {
@@ -142,9 +143,13 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 		}
 		// update password
-		if d.HasChange(attrRolePassword) || d.HasChange(attrRoleUsername) {
+		if d.HasChange(attrRolePassword) || d.HasChange(attrRoleUsername) || d.HasChange(attrRoleLogin) {
+			loginString := "LOGIN"
+			if !login {
+				loginString = "NOLOGIN"
+			}
 			newValue := d.Get(attrRolePassword).(string)
-			sql := fmt.Sprintf("ALTER ROLE %s PASSWORD '%s'", pq.QuoteIdentifier(userName), pq.QuoteLiteral(newValue))
+			sql := "ALTER ROLE " + pq.QuoteIdentifier(userName) + " WITH " + loginString + " PASSWORD " + pq.QuoteLiteral(newValue)
 			if _, err := tx.Exec(ctx, sql); err != nil {
 				return err
 			}
