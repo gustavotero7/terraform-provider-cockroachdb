@@ -1,6 +1,6 @@
 module github.com/gustavotero7/terraform-provider-cockroachdb
 
-go 1.17
+go 1.18
 
 require (
 	github.com/cockroachdb/cockroach-go/v2 v2.2.15

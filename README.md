@@ -5,7 +5,7 @@ CockroachDB terraform provider with support for databases, grants  (+ grant role
 ## Requirements
 
 -	[Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
--	[Go](https://golang.org/doc/install) >= 1.17
+-	[Go](https://golang.org/doc/install) >= 1.18
 
 ## Building The Provider
 
