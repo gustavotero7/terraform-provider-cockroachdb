@@ -45,8 +45,8 @@ resource "cockroachdb_grant_role" "test_user_grant_test_role" {
 
 ### Optional
 
-- `login` (Boolean) Allow role to login.
-- `password` (String) Role password
+- `login` (Boolean) Allow role to login. Defaults to `false`.
+- `password` (String) Role password Defaults to `NULL`.
 
 ### Read-Only
 

@@ -36,5 +36,5 @@ provider "cockroachdb" {
 ### Optional
 
 - `cluster` (String) CockroachDB cluster id.
-- `port` (Number) CockroachDB server port
-- `sslmode` (String) CockroachDB SSL mode to use.
+- `port` (Number) CockroachDB server port Defaults to `26257`.
+- `sslmode` (String) CockroachDB SSL mode to use. Defaults to `verify-full`.

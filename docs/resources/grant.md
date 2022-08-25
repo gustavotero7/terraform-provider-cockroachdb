@@ -18,10 +18,11 @@ resource "cockroachdb_role" "test_role" {
 }
 
 resource "cockroachdb_grant" "test_role_grant" {
-  role        = cockroachdb_role.test_role.name
-  object_type = "table"
-  objects     = ["*"]
-  privileges  = ["SELECT", "UPDATE"]
+  role           = cockroachdb_role.test_role.name
+  object_type    = "table"
+  objects        = ["*"]
+  privileges     = ["SELECT", "UPDATE"]
+  force_recreate = true
 }
 ```
 
@@ -34,6 +35,10 @@ resource "cockroachdb_grant" "test_role_grant" {
 - `objects` (List of String) Objects to grant privileges on.
 - `privileges` (List of String) Privileges to grant.
 - `role` (String) Target role Name.
+
+### Optional
+
+- `force_recreate` (Boolean) Refresh/reset all role grants on every update. Defaults to `false`.
 
 ### Read-Only
 
