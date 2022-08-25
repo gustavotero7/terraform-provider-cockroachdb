@@ -7,4 +7,5 @@ resource "cockroachdb_grant" "test_role_grant" {
   object_type = "table"
   objects     = ["*"]
   privileges  = ["SELECT", "UPDATE"]
+  force_recreate = true
 }

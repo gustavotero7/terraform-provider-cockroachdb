@@ -4,16 +4,18 @@ import (
 	"context"
 	"github.com/cockroachdb/cockroach-go/v2/crdb/crdbpgx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jackc/pgx/v4"
 	"strings"
 )
 
 const (
-	attrRole       = "role"
-	attrObjectType = "object_type"
-	attrObjects    = "objects"
-	attrPrivileges = "privileges"
+	attrRole          = "role"
+	attrObjectType    = "object_type"
+	attrObjects       = "objects"
+	attrPrivileges    = "privileges"
+	attrForceRecreate = "force_recreate"
 )
 
 func resourceGrant() *schema.Resource {
@@ -25,6 +27,11 @@ func resourceGrant() *schema.Resource {
 		ReadContext:   resourceGrantRead,
 		UpdateContext: resourceGrantUpdate,
 		DeleteContext: resourceGrantDelete,
+		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIf(attrForceRecreate, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				return d.Get(attrForceRecreate).(bool)
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			attrRole: {
@@ -52,6 +59,12 @@ func resourceGrant() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Required: true,
+			},
+			attrForceRecreate: {
+				Description: "Refresh/reset all role grants on every update.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 		},
 	}
@@ -176,16 +189,14 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	role := d.Get(attrRole).(string)
 	objectType := d.Get(attrObjectType).(string)
 	objects := d.Get(attrObjects).([]interface{})
-	privileges := d.Get(attrPrivileges).([]interface{})
 	objectsStr := sliceInterfacesToStrings(objects)
-	privilegesStr := sliceInterfacesToStrings(privileges)
 
 	conn, err := meta.(*apiClient).Conn(ctx)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if err := crdbpgx.ExecuteTx(ctx, conn, pgx.TxOptions{}, func(tx pgx.Tx) error {
-		query := "REVOKE " + strings.Join(privilegesStr, ", ") + " ON " + objectType + " " + strings.Join(objectsStr, ",") + " FROM " + role
+		query := "REVOKE ALL ON " + objectType + " " + strings.Join(objectsStr, ",") + " FROM " + role
 		_, err := tx.Exec(ctx, query)
 		if err != nil {
 			return err
