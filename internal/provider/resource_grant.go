@@ -85,7 +85,9 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := crdbpgx.ExecuteTx(ctx, conn, pgx.TxOptions{}, func(tx pgx.Tx) error {
 		query := "GRANT " + strings.Join(privilegesStr, ", ") + " ON " + objectType + " " + strings.Join(objectsStr, ",") + " TO " + role
 		_, err = tx.Exec(ctx, query)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "no object matched") {
+			// ignore (SQL Error [42704]: ERROR: no object matched) error, we do not want to fail if object(s) does not exist
+			// resource update has no effect in this case
 			return err
 		}
 		return nil
