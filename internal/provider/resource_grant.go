@@ -96,11 +96,19 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(buildGrantID(role, objectType))
-	d.Set(attrRole, role)
-	d.Set(attrObjectType, objectType)
-	d.Set(attrObjects, objects)
-	d.Set(attrPrivileges, privileges)
-	return resourceGrantRead(ctx, d, meta)
+	if err := d.Set(attrRole, role); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set(attrObjectType, objectType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set(attrObjects, objects); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set(attrPrivileges, privileges); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }
 
 func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
