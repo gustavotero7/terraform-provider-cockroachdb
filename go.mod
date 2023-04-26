@@ -7,7 +7,7 @@ require (
 	github.com/hashicorp/terraform-plugin-docs v0.14.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
 	github.com/jackc/pgx/v4 v4.18.1
-	github.com/lib/pq v1.10.8
+	github.com/lib/pq v1.10.9
 )
 
 require (
