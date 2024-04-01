@@ -3,7 +3,7 @@ module github.com/gustavotero7/terraform-provider-cockroachdb
 go 1.18
 
 require (
-	github.com/cockroachdb/cockroach-go/v2 v2.3.5
+	github.com/cockroachdb/cockroach-go/v2 v2.3.7
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0
 	github.com/jackc/pgx/v4 v4.18.1
